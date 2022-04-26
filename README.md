@@ -16,7 +16,7 @@ programming language for simple string values.
 
 ## Author
 
-- [@ajaycc17(Ajay Choudhury)](https://www.github.com/ajaycc17)
+- [@ajaycc17](https://www.github.com/ajaycc17)(Ajay Choudhury)
 
 
 
