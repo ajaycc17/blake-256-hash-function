@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define toRead 64
+
 typedef struct
 {
   uint32_t h[8], s[4], t[2];
@@ -294,23 +296,73 @@ void blake_256(uint8_t *out, const uint8_t *in, uint64_t inlen)
 
 int main(int argc, char **argv)
 {
-  // take the message
-  char *in = "";
-
-  // length of message
-  size_t msg_len = strlen(in);
-
-  // output array - this will contain the final hash
-  uint8_t out[32];
-
-  // invoke the hashing function
-  blake_256(out, in, msg_len);
-
-  // print the hash in hexadecimal form
-  printf("BLAKE256 HASH for \"\": ");
-  for (int i = 0; i < 32; ++i)
+  if (argc < 2)
   {
-    printf("%x", out[i]);
+    // take the message
+    char *in = "ajay";
+
+    // length of message
+    size_t msg_len = strlen(in);
+
+    // output array - this will contain the final hash
+    uint8_t out[32];
+
+    // invoke the hashing function
+    blake_256(out, in, msg_len);
+
+    // print the hash in hexadecimal form
+    printf("BLAKE256 HASH for \"%s\" is: ", in);
+    for (int i = 0; i < 32; ++i)
+    {
+      printf("%02x", out[i]);
+    }
+  }
+  else
+  {
+    FILE *fp;
+    int i, j, bytesread;
+    uint8_t in[toRead], out[32];
+    state256 S;
+
+    // read until all the files are processed
+    for (i = 1; i < argc; ++i)
+    {
+      fp = fopen(*(argv + i), "r");
+      if (fp == NULL)
+      {
+        printf("Error: unable to open %s\n", *(argv + i));
+        return 1;
+      }
+
+      // initialize a state with constants
+      initialize(&S);
+
+      // read the file given as input
+      while (1)
+      {
+        // read in 64-bit blocks
+        bytesread = fread(in, 1, toRead, fp);
+
+        // if somethings is read update it else break
+        if (bytesread)
+          add_padding(&S, in, bytesread);
+        else
+          break;
+      }
+
+      // generate the hash digest
+      final(&S, out);
+
+      // print the hash digest
+      printf("BLAKE-256 HASH for \"%s\" is: ", *(argv + i));
+      for (j = 0; j < 32; ++j)
+      {
+        printf("%02x", out[j]);
+      }
+
+      // close the file pointer
+      fclose(fp);
+    }
   }
   return 0;
 }
